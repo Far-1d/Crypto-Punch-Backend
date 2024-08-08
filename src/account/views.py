@@ -23,6 +23,8 @@ class UserViewSet(viewsets.ViewSet):
         user = serializer.save()
 
         user = authenticate(request, username=serializer.validated_data['username'], password=serializer.validated_data['password'])
+        user.last_login = timezone.now()
+        user.save(update_fields=['last_login'])
         user_serializer = UserSerializer(user)
         return Response(create_token(user_serializer.data), status=status.HTTP_201_CREATED)
 
