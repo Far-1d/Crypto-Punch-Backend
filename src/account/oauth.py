@@ -4,13 +4,13 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-ACCESS_TOKEN_EXPIRY_MINUTES = os.environ['ACCESS_TOKEN_EXPIRY_MINUTES']
+ACCESS_TOKEN_EXPIRY_MINUTES = int(os.environ['ACCESS_TOKEN_EXPIRY_MINUTES'])
 ALGORITHM = os.environ['ALGORITHM']
 SECRET = os.environ['SECRET']
 
 def create_token (payload:dict):
     copy = payload.copy()
-
+    
     expire = datetime.datetime.now() + datetime.timedelta(minutes = ACCESS_TOKEN_EXPIRY_MINUTES)
     copy.update({"exp" : expire})
     
