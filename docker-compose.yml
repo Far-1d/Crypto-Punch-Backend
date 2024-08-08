@@ -1,0 +1,46 @@
+services:
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    port:
+      -"8000:8000"  #local : docker
+    volumes:
+      - .:/app    # every change at . will be reflected on /app (docker app) and vice versa
+    depends_on:
+      - db
+      - cache
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+
+  db:
+    image: postgres:latest
+    restart: always
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      -54321:5432
+  
+  cache:
+    image: redis:latest
+    restart: always
+    volumes:
+      - ./data/cache:/data
+
+  nginx:
+    image: nginx:latest
+    restart: always
+    volumes:
+      - ./config/nginx:/etc/nginx/templates
+      - .:/code
+    ports:
+      - "80:80"
+      - "443:443"
