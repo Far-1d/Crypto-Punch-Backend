@@ -41,6 +41,13 @@ AUTHENTICATION_BACKENDS = [
  'account.authentication.EmailAuthBackend',
 ]
 
+# DRF pagination
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,  # Default number of posts per page
+}
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -52,7 +59,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
-    'account.apps.AccountConfig'
+    'account.apps.AccountConfig',
+    'news.apps.NewsConfig',
+    'asset.apps.AssetConfig',
+    'comment.apps.CommentConfig',
+    'ckeditor',
 ]
 
 MIDDLEWARE = [

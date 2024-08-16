@@ -27,6 +27,11 @@ class User(AbstractUser):
     EMAIL_FIELD = 'email'
 
     class Meta:
+        indexes = [
+            models.Index(fields=['-created']),
+            models.Index(fields=['username'])
+        ]
+
         verbose_name = 'User'
         verbose_name_plural = 'Users'
 
