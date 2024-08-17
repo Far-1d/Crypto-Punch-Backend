@@ -1,10 +1,13 @@
 from django.contrib import admin
 from .models import News, Category
+from unfold.admin import ModelAdmin
 
 # Register your models here.
 @admin.register(News)
-class AdminNews(admin.ModelAdmin):
+class AdminNews(ModelAdmin):
     list_display = ['id', 'title_short', 'content_short', 'writer_name', 'likes_count', 'category', 'status', 'published_at']
+    list_filter = ["status", 'category', "published_at"]
+    search_fields = ['title', 'content']
 
     @admin.display(description='title')
     def title_short(self, obj):
@@ -23,5 +26,5 @@ class AdminNews(admin.ModelAdmin):
         return obj.likes.count()
     
 @admin.register(Category)
-class AdminNews(admin.ModelAdmin):
+class AdminNews(ModelAdmin):
     list_display = ['id', 'name', 'description']
