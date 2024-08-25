@@ -2,7 +2,12 @@ import datetime
 import jwt
 import os
 from dotenv import load_dotenv
-load_dotenv()
+# load_dotenv()
+from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from the .env file in the account app
+load_dotenv(os.path.join(BASE_DIR, 'account', '.env'))
 
 ACCESS_TOKEN_EXPIRY_MINUTES = int(os.environ['ACCESS_TOKEN_EXPIRY_MINUTES'])
 ALGORITHM = os.environ['ALGORITHM']
@@ -31,19 +36,3 @@ def verify_token(token:str, secret:str):
         return 
 
     return payload
-
-# def verify_token(token:str, credentials_exception):
-
-#     try:
-#         payload = jwt.decode(token, SECRET, algorithms = [ALGORITHM])
-#         email: str = payload.get("email")
-
-#         if email is None :
-#             raise credentials_exception
-
-#         token_data = payload(user = email)
-#         print(token_data)
-#     except :
-#         raise credentials_exception
-
-#     return token_data

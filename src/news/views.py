@@ -1,4 +1,5 @@
-from django.shortcuts import render
+from datetime import timedelta
+from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
@@ -8,7 +9,6 @@ from rest_framework.filters import SearchFilter
 from rest_framework import generics
 from .models import News
 from account.models import User
-from .tasks import news_update
 import math
 # Create your views here.
 
@@ -79,15 +79,25 @@ class NewsViewSet(viewsets.ViewSet):
         return Response(news_like.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def update(self, request):
-        counter = 0
-        for news in news_update():
-            tags = news['tags']
-            del news['tags']
-            try:
-                News.objects.get(title=news['title'])
-            except:
-                new_news = News.objects.create(**news)
-                new_news.save()
-                counter += 1
+        news = News.objects.first()
+        update = get_update(news.updated_at)
+        return Response({'message':f'Latest news added {update}'}, status=status.HTTP_200_OK)
+    
 
-        return Response({'message':f'{counter} news added'}, status=status.HTTP_200_OK)
+def get_update(time):
+        # Calculate the time difference
+        now = timezone.now()
+        time_difference = now -time
+
+        # Format the time difference
+        if time_difference < timedelta(minutes=1):
+            return "Just now"
+        elif time_difference < timedelta(hours=1):
+            minutes = time_difference.seconds // 60
+            return f"{minutes} minute{'s' if minutes != 1 else ''} ago"
+        elif time_difference < timedelta(days=1):
+            hours = time_difference.seconds // 3600
+            return f"{hours} hour{'s' if hours != 1 else ''} ago"
+        else:
+            days = time_difference.days
+            return f"{days} day{'s' if days != 1 else ''} ago"

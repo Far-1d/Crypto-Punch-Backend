@@ -1,8 +1,11 @@
+from celery import shared_task
 import requests
 from bs4 import BeautifulSoup
 from django.utils.html import mark_safe
+from news.models import News
 import bleach
 
+@shared_task
 def news_update():
     response = requests.get('https://crypto.news/')
     if response.status_code == 200:
@@ -11,6 +14,7 @@ def news_update():
         try:
             swiper_divs = main.select("div[class*='press-releases'] div[class*='swiper-wrapper']")[0].find_all('div', recursive=False)
             print("swipers are ",len(swiper_divs))
+            counter = 0
             for div in swiper_divs:
                 image = div.find('figure').find('img')['src']
                 link = div.find('figure').find('a')['href']
@@ -35,7 +39,18 @@ def news_update():
                 news = {'title': title, 'image':image,
                         'content': content, 'tags':[]}
                 if news['title'] and news['content'] and news['image']:
-                    yield news
+                    # yield news
+                    
+                    tags = news['tags']
+                    del news['tags']
+                    try:
+                        News.objects.get(title=news['title'])
+                    except:
+                        new_news = News.objects.create(**news)
+                        new_news.save()
+                        counter += 1
+
+            print(f"{counter} news added to db")
         except Exception as e:
             print('swiper failed')
             print(e)

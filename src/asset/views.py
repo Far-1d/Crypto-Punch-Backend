@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from datetime import timedelta
 from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
 from rest_framework import generics
@@ -6,9 +6,10 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import SearchFilter
 from .serializers import AssetSerializer, AssetFavSerializer, AssetDetailSerializer, ExchangeListSerializer
 from .models import Asset, Exchange
-from .tasks import get_coinList_with_marketData, get_exchange_date
 from account.models import User
 import math
+import random
+from django.utils import timezone
 
 class CustomPagination(PageNumberPagination):
     page_size_query_param = 'page_size'  # Allow users to set the page size
@@ -59,19 +60,20 @@ class CoinViewSet(viewsets.ViewSet):
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request):
-        counter = 0
-        updates = 0
-        for asset in get_coinList_with_marketData():
-            _, created = Asset.objects.update_or_create(
-                name=asset['name'],
-                defaults=asset
-            )
-            if created:
-                counter +=1
-            else:
-                updates += 1
-
-        return Response({'message':f'{counter} assets added and {updates} assets updated'}, status=status.HTTP_200_OK)
+        # counter = 0
+        # updates = 0
+        # for asset in get_coinList_with_marketData():
+        #     _, created = Asset.objects.update_or_create(
+        #         name=asset['name'],
+        #         defaults=asset
+        #     )
+        #     if created:
+        #         counter +=1
+        #     else:
+        #         updates += 1
+        asset = Asset.objects.first()
+        update = get_update(asset.updated_at)
+        return Response({'message':f'Last update was {update}'}, status=status.HTTP_200_OK)
 
     def is_fav(self, request):
         data = AssetFavSerializer(data=request.data)
@@ -97,21 +99,46 @@ class ExchangeSet(viewsets.ViewSet):
     permission_classes = [permissions.AllowAny]
 
     def update(self, request):
-        counter = 0
-        updates = 0
-        for exchange in get_exchange_date():
-            _, created = Exchange.objects.update_or_create(
-                name=exchange['name'],
-                defaults=exchange
-            )
-            if created:
-                counter +=1
-            else:
-                updates += 1
-
-        return Response({'message':f'{counter} assets added and {updates} assets updated'}, status=status.HTTP_200_OK)
+        # counter = 0
+        # updates = 0
+        # for exchange in get_exchange_date():
+        #     _, created = Exchange.objects.update_or_create(
+        #         name=exchange['name'],
+        #         defaults=exchange
+        #     )
+        #     if created:
+        #         counter +=1
+        #     else:
+        #         updates += 1
+        exchange = Exchange.objects.first()
+        update = get_update(exchange.updated_at)
+        return Response({'message':f'Last update was {update}'}, status=status.HTTP_200_OK)
 
     def random(self, request, x:int):
-        exchanges = Exchange.objects.order_by('?')[:x]
+        top_exchanges = Exchange.objects.all()[:20]
+        exchanges = random.sample(list(top_exchanges), k=x)
         ser = ExchangeListSerializer(exchanges, many=True)
         return Response(ser.data, status=status.HTTP_200_OK)
+
+
+
+
+
+
+def get_update(time):
+        # Calculate the time difference
+        now = timezone.now()
+        time_difference = now -time
+
+        # Format the time difference
+        if time_difference < timedelta(minutes=1):
+            return "Just now"
+        elif time_difference < timedelta(hours=1):
+            minutes = time_difference.seconds // 60
+            return f"{minutes} minute{'s' if minutes != 1 else ''} ago"
+        elif time_difference < timedelta(days=1):
+            hours = time_difference.seconds // 3600
+            return f"{hours} hour{'s' if hours != 1 else ''} ago"
+        else:
+            days = time_difference.days
+            return f"{days} day{'s' if days != 1 else ''} ago"

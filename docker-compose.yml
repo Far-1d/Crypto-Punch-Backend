@@ -4,18 +4,20 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    port:
-      -"8000:8000"  #local : docker
+    command: ["./wait-for-it.sh", "db:5432", "--",
+      "python", "/app/porfolio/manage.py", "runserver",
+      "0.0.0.0:8000"]
+      # "uwsgi", "--ini", "/code/config/uwsgi/uwsgi.ini"
+    ports:
+      - "8000:8000"  #local : docker
     volumes:
       - .:/app    # every change at . will be reflected on /app (docker app) and vice versa
     depends_on:
       - db
-      - cache
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-
 
   db:
     image: postgres:latest
@@ -27,13 +29,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     ports:
-      -54321:5432
-  
-  cache:
-    image: redis:latest
-    restart: always
-    volumes:
-      - ./data/cache:/data
+      - 54321:5432
 
   nginx:
     image: nginx:latest

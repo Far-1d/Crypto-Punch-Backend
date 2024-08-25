@@ -1,44 +1,25 @@
-# upstream for uWSGI
-upstream uwsgi_app {
-    server unix:/code/educa/uwsgi_app.sock;
-}
+http {
+    server {
+        listen 80;  # Listen on HTTP
 
-# upstream for daphne
-upstream daphne {
-    server unix:/coe/educa/daphne.sock;
-}
+        # Redirect HTTP to HTTPS
+        location / {
+            include uwsgi_params;
+            uwsgi_pass 127.0.0.1:3031;
+            return 301 https://$host$request_uri;
+        }
 
-server {
-    listen              80;
-    server_name         *.educaproject.com educaproject.com;
-    return          301 https://$host$request_uri;
-}
-server {
-    listen              443 ssl;
-    ssl_certificate     /code/educa/ssl/educa.crt;
-    ssl_certificate_key /code/educa/ssl/educa.key;
-    server_name         www.educaproject.com educaproject.com;
-    error_log           stderr warn;
-    access_log          /dev/stdout main;
-
-    location /  {
-        include     /etc/nginx/uwsgi_params;
-        uwsgi_pass  uwsgi_app;
+        # Proxy configuration for Django application
+        location /api/ {  # Assuming your API endpoints start with /api/
+            proxy_pass http://backend:8000;  # Forward requests to the backend service
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
     }
 
-    location /ws/ {
-        proxy_http_version  1.1;
-        proxy_set_header    upgrade $http_upgrade;
-        proxy_set_header    connection "upgrade";
-        proxy_redirect      off;
-        proxy_pass          http://daphne;
-    }
-
-    location /static/ {
-        alias /code/educa/static/;
-    }
-
-    location /media/ {
-        alias /code/educa/media/;
+    upstream backend {
+        server backend:8000;  # The backend service running in Docker
     }
 }

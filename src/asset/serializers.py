@@ -1,4 +1,3 @@
-import math
 from rest_framework import serializers
 from .models import Asset, Exchange
 from django.utils import timezone
@@ -105,6 +104,11 @@ class AssetFavSerializer(serializers.Serializer):
     user_id = serializers.CharField()
 
 class ExchangeListSerializer(serializers.ModelSerializer):
+    volume = serializers.SerializerMethodField()
     class Meta:
         model = Exchange
-        fields = "__all__"
+        fields = ['name','url','established','image','volume',
+                  'last_update','trust_score','trust_rank']
+    
+    def get_volume(self,obj):
+        return "{:,}".format(round(obj.daily_volume,3))

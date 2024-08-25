@@ -16,6 +16,8 @@ from pathlib import Path
 from django.templatetags.static import static
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,14 +25,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-a#=gbg$ou43bcz5gwnd25$1v*k+mrt^iq7t^9jlv0+0n%42-te'
-
+SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG')
 
 ALLOWED_HOSTS = ["*", "https:\\*", 'http:\\*']
+
+ADMINS = [
+ ('Farid Z', 'farid.zarie.000@gmail.com'),
+]
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -107,18 +111,17 @@ WSGI_APPLICATION = 'porfolio.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+import dj_database_url
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        # 'NAME': os.environ.get('POSTGRES_DB'),
-        # 'USER': os.environ.get('POSTGRES_USER'),
-        # 'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
-        # 'HOST': 'db',
-        # 'POST': 5432,
-        'NAME': 'porfolio',
-        'USER': 'postgres',
-        'PASSWORD': '1'
-    }
+    'default': dj_database_url.config(default=os.environ.get("DATABASE_URL"))
+    # {
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME': 'porfolio',#os.environ.get('POSTGRES_DB'),     #database name
+    #     'USER': 'postgres',#os.environ.get('POSTGRES_USER'),
+    #     'PASSWORD': '1',#os.environ.get('POSTGRES_PASSWORD'),
+    #     'HOST': 'wihost',         #not needed on local
+    #     'PORT': 5432              #not needed on local
+    # }
 }
 
 
@@ -164,11 +167,11 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-INTERNAL_IPS = [
-    '127.0.0.1',
-    '0.0.0.0',
-    'mysite.com',
-]
+# INTERNAL_IPS = [
+#     '127.0.0.1',
+#     '0.0.0.0',
+#     'crypto-punch-backend.liara.com',
+# ]
 
 ADMINS = [
     ('Farid Z', 'farid.z@mysite.com'),
@@ -200,7 +203,7 @@ CACHES['default']['LOCATION'] = REDIS_URL
 UNFOLD = {
     "SITE_TITLE": "Crypto Punch",
     "SITE_HEADER": "Crypto Punch Administration",
-    "SITE_URL": "http://localhost:3000/",
+    "SITE_URL": "https://cryptopunch.tech/",
     "COLORS": {
         "primary": {
             "50": "254 242 242",
@@ -220,3 +223,51 @@ UNFOLD = {
         "show_all_applications": True,  # Dropdown with all applications and models
     },
 }
+
+
+from celery.schedules import crontab
+CELERY_BEAT_SCHEDULE = {
+    'update-news-every_12_hours': {
+        'task': 'news.tasks.news_update',
+        'schedule': crontab(minute=0, hour='*/12'),  # Every 12 hour
+    },
+    'update_asset_every_20_minutes': {
+        'task': 'asset.tasks.get_coinList_with_marketData1',
+        'schedule': crontab(minute='*/20'),  # Every 20 minutes
+    },
+    'update_medium_asset_every_2_hour': {
+        'task': 'asset.tasks.get_coinList_with_marketData2',
+        'schedule': crontab(hour='*/2'),  # Every 2 hour
+    },
+    'update_last_asset_every_6_hour': {
+        'task': 'asset.tasks.get_coinList_with_marketData3',
+        'schedule': crontab(hour='*/6'),  # Every 6 hour
+    },
+    'update_exchange_every_1_day': {
+        'task': 'asset.tasks.get_exchange_date',
+        'schedule': crontab(hour=0),  # at 00:00 o'clock
+    },
+}
+
+
+# import logging
+# import logging.config
+
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'handlers': {
+#         'file': {
+#             'level': 'ERROR',
+#             'class': 'logging.FileHandler',
+#             'filename': os.path.join(BASE_DIR, 'django_error.log'),  # Adjust the path as needed
+#         },
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['file'],
+#             'level': 'ERROR',
+#             'propagate': True,
+#         },
+#     },
+# }

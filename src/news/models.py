@@ -30,8 +30,8 @@ class News(models.Model):
     likes = models.ManyToManyField(User, 
                                    related_name='liked_news', 
                                    blank=True)
-    published_at = models.DateField(auto_now_add=True)
-    updated_at = models.DateField(auto_now=True)
+    published_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     status = models.CharField(max_length=20, choices=[
         ('draft', 'Draft'),
