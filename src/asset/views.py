@@ -21,21 +21,35 @@ class CoinListView(generics.ListAPIView):
     pagination_class = CustomPagination
     filter_backends = (SearchFilter,)
     search_fields = ['name', 'symbol']
+    
+    def get_queryset(self):
+        queryset = Asset.objects.defer(
+            'fully_diluted_valuation','circulating_supply','ath','ath_change_percentage','ath_date',
+            'atl','atl_change_percentage','atl_date','price_change_percentage_24h', 'twitter', 'exchanges',
+            'high_24h', 'low_24h', 'description'
+        ).prefetch_related('users_interested').all()
+        return queryset
+ 
 
 # Create your views here.
 class CoinViewSet(viewsets.ViewSet):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, pk:str):
-        asset = Asset.objects.get(id=pk)
-        if not asset:
-            return Response({'error': 'Invalid Data'}, status=status.HTTP_403_FORBIDDEN)
+        if not is_positive_integer(pk):
+            return Response({'error': 'Invalid Key'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            asset = Asset.objects.get(id=pk)
+        except:
+            return Response({'error': 'Invalid Key'}, status=status.HTTP_403_FORBIDDEN)
         list = AssetDetailSerializer(asset)
         return Response(list.data, status=status.HTTP_200_OK)
 
     def number_pages(self, request, page_size):
-        asset = Asset.objects.all()
-        return Response({'size': math.ceil(asset.count()/page_size)}, status=status.HTTP_200_OK)
+        if page_size == 0:
+            return Response({'message': 'zero is not accepted'}, status=status.HTTP_400_BAD_REQUEST) 
+        asset = Asset.objects.count()
+        return Response({'size': math.ceil(asset/page_size)}, status=status.HTTP_200_OK)
     
     def add_fav(self, request):
         data = AssetFavSerializer(data=request.data)
@@ -121,9 +135,12 @@ class ExchangeSet(viewsets.ViewSet):
         return Response(ser.data, status=status.HTTP_200_OK)
 
 
-
-
-
+def is_positive_integer(user_input):
+    try:
+        value = int(user_input)
+        return value > 0
+    except:
+        return False
 
 def get_update(time):
         # Calculate the time difference

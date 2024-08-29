@@ -27,6 +27,16 @@ class ExchangeSerializer(serializers.ModelSerializer):
             days = time_difference.days
             return f"{days} day{'s' if days != 1 else ''} ago"
 
+class ExchangeListSerializer(serializers.ModelSerializer):
+    volume = serializers.SerializerMethodField()
+    class Meta:
+        model = Exchange
+        fields = ['name','url','established','image','volume',
+                  'last_update','trust_score','trust_rank']
+    
+    def get_volume(self,obj):
+        return "{:,}".format(round(obj.daily_volume,3))
+
 class AssetSerializer(serializers.ModelSerializer):
     market = serializers.SerializerMethodField()
     _price = serializers.SerializerMethodField()
@@ -102,13 +112,3 @@ class AssetNameSerializer(serializers.ModelSerializer):
 class AssetFavSerializer(serializers.Serializer):
     asset_id = serializers.CharField()
     user_id = serializers.CharField()
-
-class ExchangeListSerializer(serializers.ModelSerializer):
-    volume = serializers.SerializerMethodField()
-    class Meta:
-        model = Exchange
-        fields = ['name','url','established','image','volume',
-                  'last_update','trust_score','trust_rank']
-    
-    def get_volume(self,obj):
-        return "{:,}".format(round(obj.daily_volume,3))

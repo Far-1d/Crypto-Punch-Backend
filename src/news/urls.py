@@ -21,4 +21,7 @@ urlpatterns = [
     path('update', views.NewsViewSet.as_view({
         'get': 'update'
     })),
+    path('create', views.NewsViewSet.as_view({
+        'post': 'create'
+    })),
 ]

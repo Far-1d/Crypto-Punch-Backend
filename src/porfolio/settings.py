@@ -13,10 +13,10 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 import os
 from pathlib import Path
 
-from django.templatetags.static import static
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from dotenv import load_dotenv
+from .ckeditorSetting import *
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -31,6 +31,9 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = os.environ.get('DEBUG')
 
 ALLOWED_HOSTS = ["*", "https:\\*", 'http:\\*']
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
 
 ADMINS = [
  ('Farid Z', 'farid.zarie.000@gmail.com'),
@@ -42,7 +45,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOWED_ORIGINS = [
     "https://cryptopunch.tech",
-    'localhost:3000'
+    'http://localhost'
 ]
 
 # set custom user model
@@ -77,13 +80,16 @@ INSTALLED_APPS = [
     'news.apps.NewsConfig',
     'asset.apps.AssetConfig',
     'comment.apps.CommentConfig',
-    'ckeditor',
+    'django_ckeditor_5',
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    # 'porfolio.middleware.RestrictOriginMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -117,15 +123,15 @@ WSGI_APPLICATION = 'porfolio.wsgi.application'
 
 import dj_database_url
 DATABASES = {
-    'default': dj_database_url.config(default=os.environ.get("DATABASE_URL"))
-    # {
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME': 'porfolio',#os.environ.get('POSTGRES_DB'),     #database name
-    #     'USER': 'postgres',#os.environ.get('POSTGRES_USER'),
-    #     'PASSWORD': '1',#os.environ.get('POSTGRES_PASSWORD'),
-    #     'HOST': 'wihost',         #not needed on local
-    #     'PORT': 5432              #not needed on local
-    # }
+    # 'default': dj_database_url.config(default=os.environ.get("DATABASE_URL"))
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'porfolio',#os.environ.get('POSTGRES_DB'),     #database name
+        'USER': 'postgres',#os.environ.get('POSTGRES_USER'),
+        'PASSWORD': '1',#os.environ.get('POSTGRES_PASSWORD'),
+        # 'HOST': 'wihost',         #not needed on local
+        # 'PORT': 5432              #not needed on local
+    }
 }
 
 
@@ -170,12 +176,6 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
-# INTERNAL_IPS = [
-#     '127.0.0.1',
-#     '0.0.0.0',
-#     'crypto-punch-backend.liara.com',
-# ]
 
 ADMINS = [
     ('Farid Z', 'farid.z@mysite.com'),
@@ -252,26 +252,3 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': crontab(hour=0),  # at 00:00 o'clock
     },
 }
-
-
-# import logging
-# import logging.config
-
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'handlers': {
-#         'file': {
-#             'level': 'ERROR',
-#             'class': 'logging.FileHandler',
-#             'filename': os.path.join(BASE_DIR, 'django_error.log'),  # Adjust the path as needed
-#         },
-#     },
-#     'loggers': {
-#         'django': {
-#             'handlers': ['file'],
-#             'level': 'ERROR',
-#             'propagate': True,
-#         },
-#     },
-# }

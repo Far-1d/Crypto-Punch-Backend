@@ -16,10 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+import debug_toolbar
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/user/', include('account.urls', namespace='account')),
     path('api/news/', include('news.urls', namespace='news')),
     path('api/asset/', include('asset.urls', namespace='asset')),
+    path("ckeditor5/", include('django_ckeditor_5.urls')),
+    path('__debug__/', include(debug_toolbar.urls)),
 ]

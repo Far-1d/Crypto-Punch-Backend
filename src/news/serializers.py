@@ -2,8 +2,12 @@ from datetime import timedelta
 from rest_framework import serializers
 from .models import News, Category
 from account.serializers import UserSerializer
+from account.models import User
+from account.oauth import verify_token
 from asset.serializers import AssetNameSerializer
 from django.utils import timezone
+import os
+
 
 class NewsSerializer(serializers.ModelSerializer):
     tags = AssetNameSerializer(many=True, read_only=True)
@@ -53,6 +57,34 @@ class ListNewsSerializer(NewsSerializer):
             return f"{days} day{'s' if days != 1 else ''} ago"
         
 class NewsLikeSerializer(serializers.Serializer):
-
     news_id = serializers.CharField()
     user_id = serializers.CharField()
+
+class NewsCreateSerializer(serializers.ModelSerializer):
+    user_token = serializers.CharField(write_only=True)
+    category = serializers.CharField()
+
+    class Meta:
+        model = News
+        fields = ['title', 'image', 'content', 'category', 'status', 'user_token']
+
+    def create(self, validated_data):
+        # Extract the user token
+        token = validated_data.pop('user_token')
+        SECRET = os.environ['SECRET']
+        payload = verify_token(token, SECRET)
+
+        if not payload:
+            raise serializers.ValidationError({'message': 'authentication error'})
+
+        # Get the writer (user) from the payload
+        writer = User.objects.get(id=payload['id'])
+
+        # Get or create the category
+        category_name = validated_data.pop('category')
+        category, _ = Category.objects.get_or_create(name=category_name)
+
+        # Create the news item
+        news_item = News.objects.create(writer=writer, category=category, **validated_data)
+
+        return news_item

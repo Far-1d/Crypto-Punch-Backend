@@ -2,7 +2,8 @@ from django.db import models
 from account.models import User
 from asset.models import Asset
 from django.contrib.postgres.search import SearchVector
-from ckeditor.fields import RichTextField
+# from ckeditor.fields import RichTextField
+from django_ckeditor_5.fields import CKEditor5Field
 
 # Create your models here.
 class Category(models.Model):
@@ -16,8 +17,8 @@ class Category(models.Model):
         return self.name
     
 class News(models.Model):
-    title = models.CharField(max_length=255, blank=False, null=False)
-    content = RichTextField()
+    title = models.CharField(max_length=255, blank=False, null=False, unique=True)
+    content = CKEditor5Field()
     image = models.CharField(max_length=1000, null=True)
     writer = models.ForeignKey(User,
                                related_name='writen_news',
